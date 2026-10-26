@@ -1,4 +1,4 @@
-![35](https://github.com/user-attachments/assets/29c5945b-d09e-42ec-a8e3-875f41832b04)
+
 
 # End-to-End AWS EKS Voting App Deployment Guide
 
@@ -172,24 +172,23 @@ export DOCKER_EMAIL="chanduv4321@gmail.com"
 docker login -u "$DOCKER_USERNAME"
 ```
 
-### 4.3 Pull, Tag, and Push the Voting App Images
-Run the automated image preparation:
+### 4.3 Build & Push Your Custom Application Images
+Run the automated build and push command:
 ```bash
 ./eks-cmd.sh docker
 ```
 *Behind the scenes, this executes:*
 ```bash
-# Pull official community images
-docker pull dockersamples/example-voting-app-vote:latest
-docker pull dockersamples/example-voting-app-result:latest
-docker pull dockersamples/example-voting-app-worker:latest
+# 1. Build Vote Frontend (Python / Flask)
+docker build -t "${DOCKER_USERNAME}/voting-app-vote:latest" ./vote
 
-# Tag with your Docker Hub account
-docker tag dockersamples/example-voting-app-vote:latest "${DOCKER_USERNAME}/voting-app-vote:latest"
-docker tag dockersamples/example-voting-app-result:latest "${DOCKER_USERNAME}/voting-app-result:latest"
-docker tag dockersamples/example-voting-app-worker:latest "${DOCKER_USERNAME}/voting-app-worker:latest"
+# 2. Build Result Dashboard (Node.js / Express)
+docker build -t "${DOCKER_USERNAME}/voting-app-result:latest" ./result
 
-# Push to your Docker Hub repository
+# 3. Build Background Worker (Python / PostgreSQL / Redis)
+docker build -t "${DOCKER_USERNAME}/voting-app-worker:latest" ./worker
+
+# 4. Push all your custom images to your Docker Hub repository
 docker push "${DOCKER_USERNAME}/voting-app-vote:latest"
 docker push "${DOCKER_USERNAME}/voting-app-result:latest"
 docker push "${DOCKER_USERNAME}/voting-app-worker:latest"

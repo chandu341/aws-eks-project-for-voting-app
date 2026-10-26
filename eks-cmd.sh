@@ -157,10 +157,10 @@ create_public_nodegroup() {
 }
 
 # ------------------------------------------------------------------------------
-# STEP 5: PREPARE DOCKER IMAGES UNDER YOUR OWN DOCKER HUB ACCOUNT
+# STEP 5: BUILD & PUSH YOUR OWN DOCKER IMAGES TO DOCKER HUB
 # ------------------------------------------------------------------------------
 prepare_docker_images() {
-  echo ">>> Preparing Docker images under your account: ${DOCKER_USERNAME}..."
+  echo ">>> Building your own custom container images under account: ${DOCKER_USERNAME}..."
 
   if [ -z "${DOCKER_USERNAME}" ]; then
     echo "ERROR: Please set DOCKER_USERNAME in STEP 0!"
@@ -178,22 +178,25 @@ prepare_docker_images() {
   # Log in to Docker Hub
   echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
 
-  # Option A: Pull original community voting app images and push to your registry
-  echo ">>> Pulling official Docker voting app images..."
-  docker pull dockersamples/example-voting-app-vote:latest
-  docker pull dockersamples/example-voting-app-result:latest
-  docker pull dockersamples/example-voting-app-worker:latest
+  # 1. Build Vote frontend
+  echo ">>> [1/3] Building Vote frontend image (${DOCKER_USERNAME}/voting-app-vote:latest)..."
+  docker build -t "${DOCKER_USERNAME}/voting-app-vote:latest" ./vote
 
-  echo ">>> Re-tagging images with your Docker Hub username (${DOCKER_USERNAME})..."
-  docker tag dockersamples/example-voting-app-vote:latest "${DOCKER_USERNAME}/voting-app-vote:latest"
-  docker tag dockersamples/example-voting-app-result:latest "${DOCKER_USERNAME}/voting-app-result:latest"
-  docker tag dockersamples/example-voting-app-worker:latest "${DOCKER_USERNAME}/voting-app-worker:latest"
+  # 2. Build Result dashboard
+  echo ">>> [2/3] Building Result dashboard image (${DOCKER_USERNAME}/voting-app-result:latest)..."
+  docker build -t "${DOCKER_USERNAME}/voting-app-result:latest" ./result
 
-  echo ">>> Pushing images to your personal Docker Hub repository..."
+  # 3. Build Worker background service
+  echo ">>> [3/3] Building Worker background processor (${DOCKER_USERNAME}/voting-app-worker:latest)..."
+  docker build -t "${DOCKER_USERNAME}/voting-app-worker:latest" ./worker
+
+  # 4. Push your images to your personal Docker Hub repository
+  echo ">>> Pushing your custom images to your Docker Hub repository..."
   docker push "${DOCKER_USERNAME}/voting-app-vote:latest"
   docker push "${DOCKER_USERNAME}/voting-app-result:latest"
   docker push "${DOCKER_USERNAME}/voting-app-worker:latest"
-  echo ">>> Images successfully pushed to Docker Hub!"
+
+  echo ">>> All your custom images were built and published successfully!"
 }
 
 # ------------------------------------------------------------------------------

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cloud Native Voting App</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 20%, #1e1e38 0%, #0d0e17 100%);
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary-a: linear-gradient(135deg, #6366f1 0%, #4338ca 100%);
+      --primary-b: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(16px);
+      border-radius: 24px;
+      padding: 48px 36px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), 0 0 40px var(--accent-glow);
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(to right, #fff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 36px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 600px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .vote-btn {
+      position: relative;
+      background: rgba(255, 255, 255, 0.03);
+      border: 2px solid var(--card-border);
+      border-radius: 20px;
+      padding: 36px 20px;
+      color: var(--text-main);
+      font-size: 1.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .vote-btn::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      z-index: 0;
+    }
+
+    .vote-btn span {
+      position: relative;
+      z-index: 1;
+    }
+
+    .vote-btn-a:hover {
+      border-color: #6366f1;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(99, 102, 241, 0.35);
+    }
+    .vote-btn-a:hover::before {
+      background: var(--primary-a);
+      opacity: 0.15;
+    }
+
+    .vote-btn-b:hover {
+      border-color: #ec4899;
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(236, 72, 153, 0.35);
+    }
+    .vote-btn-b:hover::before {
+      background: var(--primary-b);
+      opacity: 0.15;
+    }
+
+    .vote-btn:active {
+      transform: scale(0.98);
+    }
+
+    .status-alert {
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      margin-bottom: 24px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .voter-tag {
+      font-family: monospace;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="badge">AWS EKS Cloud Native Microservice</div>
+    <h1>Cast Your Vote</h1>
+    <p class="subtitle">Select an option below to submit your vote to the Redis cluster</p>
+
+    {% if status_message %}
+      <div class="status-alert">
+        {{ status_message }}
+      </div>
+    {% endif %}
+
+    <form method="POST" action="/" class="options-grid">
+      <button type="submit" name="vote" value="a" class="vote-btn vote-btn-a">
+        <span>{{ option_a }}</span>
+      </button>
+
+      <button type="submit" name="vote" value="b" class="vote-btn vote-btn-b">
+        <span>{{ option_b }}</span>
+      </button>
+    </form>
+
+    <div class="footer">
+      <span>Voter Session: <span class="voter-tag">{{ voter_id }}</span></span>
+      <span>Live on Amazon EKS ☸️</span>
+    </div>
+  </div>
+
+</body>
+</html>

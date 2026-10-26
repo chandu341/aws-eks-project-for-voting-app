@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Voting Results - Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 10%, #17182e 0%, #090a10 100%);
+      --card-bg: rgba(255, 255, 255, 0.04);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --color-a: #6366f1;
+      --color-b: #ec4899;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      border-radius: 28px;
+      padding: 48px 40px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
+      text-align: center;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      margin-bottom: 20px;
+    }
+
+    .pulse-dot {
+      width: 8px;
+      height: 8px;
+      background: #34d399;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.7; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.7; }
+    }
+
+    h1 {
+      font-size: 2.6rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(to right, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      margin-bottom: 40px;
+    }
+
+    .stats-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 36px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px 20px;
+      transition: transform 0.2s ease;
+    }
+
+    .card-a { border-bottom: 4px solid var(--color-a); }
+    .card-b { border-bottom: 4px solid var(--color-b); }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .card-percent {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .card-a .card-percent { color: #818cf8; }
+    .card-b .card-percent { color: #f472b6; }
+
+    .card-count {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 24px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .bar-a {
+      height: 100%;
+      background: linear-gradient(90deg, #4f46e5, #6366f1);
+      width: 50%;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bar-b {
+      height: 100%;
+      background: linear-gradient(90deg, #ec4899, #db2777);
+      width: 50%;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .total-votes {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      margin-bottom: 30px;
+    }
+
+    .total-votes strong {
+      color: #fff;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="live-badge">
+      <span class="pulse-dot"></span>
+      Real-Time WebSocket/API Sync
+    </div>
+
+    <h1>Voting Results</h1>
+    <p class="subtitle">Live statistics synced directly from the PostgreSQL backend database</p>
+
+    <div class="stats-cards">
+      <div class="card card-a">
+        <div class="card-title">Cats 🐱</div>
+        <div class="card-percent" id="percent-a">50%</div>
+        <div class="card-count"><span id="count-a">0</span> votes</div>
+      </div>
+
+      <div class="card card-b">
+        <div class="card-title">Dogs 🐶</div>
+        <div class="card-percent" id="percent-b">50%</div>
+        <div class="card-count"><span id="count-b">0</span> votes</div>
+      </div>
+    </div>
+
+    <div class="progress-bar-container">
+      <div class="bar-a" id="progress-a"></div>
+      <div class="bar-b" id="progress-b"></div>
+    </div>
+
+    <div class="total-votes">
+      Total Votes Recorded: <strong id="total-count">0</strong>
+    </div>
+
+    <div class="footer">
+      <span>Auto-refreshing every 1 second</span>
+      <span>Cluster: Amazon EKS ☸️</span>
+    </div>
+  </div>
+
+  <script>
+    async function updateVotes() {
+      try {
+        const res = await fetch('/api/votes');
+        if (!res.ok) return;
+        const data = await res.json();
+
+        document.getElementById('count-a').innerText = data.a;
+        document.getElementById('count-b').innerText = data.b;
+        document.getElementById('percent-a').innerText = data.aPercent + '%';
+        document.getElementById('percent-b').innerText = data.bPercent + '%';
+        document.getElementById('total-count').innerText = data.total;
+
+        document.getElementById('progress-a').style.width = data.aPercent + '%';
+        document.getElementById('progress-b').style.width = data.bPercent + '%';
+      } catch (err) {
+        console.warn('Syncing votes...', err);
+      }
+    }
+
+    // Initial update and 1-second polling
+    updateVotes();
+    setInterval(updateVotes, 1000);
+  </script>
+</body>
+</html>

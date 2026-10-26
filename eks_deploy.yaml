@@ -162,13 +162,32 @@ spec:
     spec:
       containers:
       - name: vote
-        # Replace chandudocker4321 with your Docker Hub username
-        # or use: dockersamples/example-voting-app-vote:latest
         image: chandudocker4321/voting-app-vote:latest
         imagePullPolicy: Always
+        env:
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: OPTION_A
+          value: "Cats 🐱"
+        - name: OPTION_B
+          value: "Dogs 🐶"
         ports:
         - containerPort: 80
           name: vote
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
         resources:
           requests:
             cpu: "100m"
@@ -218,13 +237,34 @@ spec:
     spec:
       containers:
       - name: result
-        # Replace chandudocker4321 with your Docker Hub username
-        # or use: dockersamples/example-voting-app-result:latest
         image: chandudocker4321/voting-app-result:latest
         imagePullPolicy: Always
+        env:
+        - name: DB_HOST
+          value: "db"
+        - name: DB_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "postgres"
+        - name: POSTGRES_DB
+          value: "postgres"
         ports:
         - containerPort: 80
           name: result
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 5
         resources:
           requests:
             cpu: "100m"
@@ -266,10 +306,23 @@ spec:
     spec: 
       containers: 
       - name: worker
-        # Replace chandudocker4321 with your Docker Hub username
-        # or use: dockersamples/example-voting-app-worker:latest
         image: chandudocker4321/voting-app-worker:latest
         imagePullPolicy: Always
+        env:
+        - name: REDIS_HOST
+          value: "redis"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: DB_HOST
+          value: "db"
+        - name: DB_PORT
+          value: "5432"
+        - name: POSTGRES_USER
+          value: "postgres"
+        - name: POSTGRES_PASSWORD
+          value: "postgres"
+        - name: POSTGRES_DB
+          value: "postgres"
         resources:
           requests:
             cpu: "100m"
