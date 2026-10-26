@@ -1,0 +1,283 @@
+# ==============================================================================
+# Voting App - Kubernetes Deployment Manifest with Private Registry Support
+# ==============================================================================
+# This manifest is configured to pull images from your private or authenticated 
+# Docker Hub registry using a Kubernetes Secret named 'docker-pwd'.
+#
+# Create the secret on your EKS cluster with:
+#   kubectl create secret docker-registry docker-pwd \
+#     --docker-server=https://index.docker.io/v1/ \
+#     --docker-username=chandudocker4321 \
+#     --docker-password=<YOUR_DOCKER_PASSWORD_OR_TOKEN> \
+#     --docker-email=chanduv4321@gmail.com
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. REDIS (In-Memory Queue for Votes)
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata: 
+  name: redis
+  labels: 
+    app: redis
+spec: 
+  clusterIP: None
+  ports:
+  - name: redis-service
+    port: 6379
+    targetPort: 6379
+  selector: 
+    app: redis
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  labels:
+    app: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+          name: redis
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+
+---
+# ------------------------------------------------------------------------------
+# 2. POSTGRES DATABASE (Data Store for Voting Results)
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata: 
+  name: db
+  labels: 
+    app: db
+spec: 
+  clusterIP: None
+  ports: 
+  - name: db
+    port: 5432
+    targetPort: 5432
+  selector: 
+    app: db
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  labels:
+    app: db
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: postgres:15-alpine
+        env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: postgres
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        ports:
+        - containerPort: 5432
+          name: db
+        volumeMounts:
+        - name: db-data
+          mountPath: /var/lib/postgresql/data
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      volumes:
+      - name: db-data
+        emptyDir: {}
+
+---
+# ------------------------------------------------------------------------------
+# 3. VOTE APP (Front-End Service and Deployment)
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: vote
+  labels:
+    app: vote
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    name: vote-service
+  selector:
+    app: vote
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vote
+  labels:
+    app: vote
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: vote
+  template:
+    metadata:
+      labels:
+        app: vote
+    spec:
+      containers:
+      - name: vote
+        # Replace chandudocker4321 with your Docker Hub username
+        image: chandudocker4321/voting-app-vote:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: vote
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+      imagePullSecrets:
+      - name: docker-pwd
+
+---
+# ------------------------------------------------------------------------------
+# 4. RESULT APP (Front-End Service and Deployment)
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: result
+  labels:
+    app: result
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 80
+    name: result-service
+  selector:
+    app: result
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: result
+  labels:
+    app: result
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: result
+  template:
+    metadata:
+      labels:
+        app: result
+    spec:
+      containers:
+      - name: result
+        # Replace chandudocker4321 with your Docker Hub username
+        image: chandudocker4321/voting-app-result:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: result
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+      imagePullSecrets:
+      - name: docker-pwd
+
+---
+# ------------------------------------------------------------------------------
+# 5. WORKER (Background Processor Service and Deployment)
+# ------------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata: 
+  name: worker
+  labels: 
+    app: worker
+spec: 
+  clusterIP: None
+  selector: 
+    app: worker
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: worker
+  labels: 
+    app: worker
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: worker
+  template: 
+    metadata: 
+      labels: 
+        app: worker
+    spec: 
+      containers: 
+      - name: worker
+        # Replace chandudocker4321 with your Docker Hub username
+        image: chandudocker4321/voting-app-worker:latest
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+      imagePullSecrets:
+      - name: docker-pwd
